@@ -5,9 +5,10 @@ import os
 import pandas as pd
 from streamlit_sortables import sort_items
 import google.generativeai as genai
+import requests
 
 # ==========================================
-# CONFIGURATION (ใช้ Secrets บน Streamlit Cloud)
+# CONFIGURATION
 # ==========================================
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "1234")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -17,7 +18,7 @@ st.set_page_config(page_title="PCM Biology Exam (Round 2)", layout="wide")
 # Initialize AI
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-1.5-pro')
 else:
     model = None
 
@@ -38,6 +39,76 @@ Example: Score: 8/10. Correctly identified receptor but missed competitive inhib
         return response.text
     except Exception as e:
         return f"AI Error: {e}"
+
+# FIELD_MAPPING จาก HTML จริงของคุณ
+FIELD_MAPPING = {
+    # Section 1: Student Info
+    'student_name': 'entry.1428432169',
+
+    # Scenario 1: Phase 1
+    's1_p1_vdo1': 'entry.1697216375',  # VDO 1 (Leg)
+    's1_p1_vdo2': 'entry.1874226739',  # VDO 2 (Eye)
+    's1_p1_system': 'entry.2095042542',  # ระบบประสาท
+    's1_p1_chem1': 'entry.696616887',   # กลุ่มสารเคมี 1
+    's1_p1_chem2': 'entry.698531293',   # กลุ่มสารเคมี 2
+
+    # Scenario 1: Phase 3 (Essays)
+    's1_essay1': 'entry.1913130773',  # Atropine mechanism
+    's1_essay2': 'entry.1292504947',  # Why not help muscle fasciculation
+
+    # Scenario 2: Phase 1 (Hormones)
+    's2_hormone_0': 'entry.1034834794',
+    's2_change_0': 'entry.1826209674',
+    's2_mech_0': 'entry.164598416',
+    's2_hormone_1': 'entry.1904032084',
+    's2_change_1': 'entry.1220042795',
+    's2_mech_1': 'entry.287683897',
+    's2_hormone_2': 'entry.1794613146',
+    's2_change_2': 'entry.1471211990',
+    's2_mech_2': 'entry.1516921212',
+
+    # Scenario 2: Phase 3 (Essays)
+    's2_essay1': 'entry.1177067011',  # Kussmaul breathing
+    's2_essay2': 'entry.1474268199',  # Hypokalemia after insulin
+
+    # Scenario 3: Phase 1
+    's3_diagnosis': 'entry.104900991',
+    's3_inheritance': 'entry.104900996',
+    's3_chance': 'entry.104907871',
+
+    # Scenario 3: Phase 3 (Essays)
+    's3_essay1': 'entry.104932597',  # Iron overload
+    's3_essay2': 'entry.104940377',  # CRISPR-Cas9
+
+    # Scenario 4: Phase 1
+    's4_q1_system': 'entry.104976657',  # ระบบประสาท
+    's4_q1_hormone': 'entry.104983229',  # ฮอร์โมน
+    's4_q1_source': 'entry.105054184',  # หลั่งจาก
+    's4_q2_hormone': 'entry.105072213',  # ฮอร์โมนไต
+    's4_q2_site': 'entry.105082017',    # ออกฤทธิ์ที่
+
+    # Scenario 4: Phase 3 (Essays)
+    's4_essay1': 'entry.105085109',  # Osmosis & seawater
+    's4_choice': 'entry.105110463',   # IV fluid choice
+    's4_reason': 'entry.105112557',   # Reason
+
+    # Scenario 5: Phase 1
+    's5_rv_type': 'entry.105114659',
+    's5_rv_role': 'entry.105140345',
+    's5_rig_type': 'entry.105143329',
+    's5_rig_role': 'entry.105180974',
+    's5_tt_type': 'entry.105255638',
+    's5_tt_role': 'entry.105276227',
+    's5_tat_type': 'entry.105283767',
+    's5_tat_role': 'entry.105292936',
+
+    # Scenario 5: Phase 3 (Essays)
+    's5_essay1': 'entry.105293666',  # RIG at wound site
+    's5_essay2': 'entry.105302093',  # No TAT if vaccinated before
+}
+
+# FORM_ID จากลิงก์ของคุณ
+FORM_ID = "1f0bQaARZzavstDVNpEIcGH78evPRNBaGNdbd55do3UU"
 
 # Initialize session state
 if 'phase' not in st.session_state:
@@ -138,7 +209,7 @@ elif st.session_state.phase == 'RUNNING':
         # ========================
         if sc == 1:
             if ph == 1:
-                st.subheader("Scenario 1: ชาวสวนถูกหามส่งโรงพยาบาลด้วยอาการน้ำลายฟูมปาก กล้ามเนื้อกระตุกและอ่อนแรง หลังกลับจากออกไปพ่นยาฆ่าแมลงในสวน")
+                st.subheader("Scenario 1: ชาวสวนถูกหามส่งโรงพยาบาลด้วยอาการน้ำลายฟูมปาก...")
                 col1, col2 = st.columns(2)
                 with col1:
                     st.info("VDO 1: อาการที่ขา")
@@ -177,7 +248,7 @@ elif st.session_state.phase == 'RUNNING':
 
             elif ph == 2:
                 st.subheader("Scenario 1: Mechanism (Drag & Drop)")
-                st.info("จงลากกล่องข้อความมาวางเรียงลำดับ เพื่ออธิบายกลไกการออกฤทธิ์ (Mechanism of Action) ของสารพิษนี้ให้ถูกต้องสมบูรณ์")
+                st.info("จงลากกล่องข้อความมาวางเรียงลำดับ...")
                 blocks = [
                     'Toxin absorption through skin/inhalation',
                     'Inhibition of Acetylcholinesterase',
@@ -196,9 +267,9 @@ elif st.session_state.phase == 'RUNNING':
 
             elif ph == 3:
                 st.subheader("Scenario 1: Synthesis & Application")
-                st.markdown("**3.1** จงอธิบายกลไกการออกฤทธิ์ของ Atropine ในระดับโมเลกุล โดยใช้คำสำคัญ: 'Competitive Inhibition' และอธิบายว่าทำไมยานี้จึงช่วยลดอาการน้ำลายฟูมปากได้")
+                st.markdown("**3.1** จงอธิบายกลไกการออกฤทธิ์ของ Atropine...")
                 essay1 = st.text_area("คำตอบ 3.1:", height=100, key="s1_essay1")
-                st.markdown("**3.2** ทำไม Atropine ถึง *ไม่ช่วย* แก้อาการกล้ามเนื้อกระตุก (Muscle Fasciculation) ที่เห็นใน VDO 1?")
+                st.markdown("**3.2** ทำไม Atropine ถึง *ไม่ช่วย* แก้อาการกล้ามเนื้อกระตุก?")
                 essay2 = st.text_area("คำตอบ 3.2:", height=100, key="s1_essay2")
                 st.session_state.answers.update({'s1_essay1': essay1, 's1_essay2': essay2})
 
@@ -207,17 +278,14 @@ elif st.session_state.phase == 'RUNNING':
         # ========================
         elif sc == 2:
             if ph == 1:
-                st.subheader("Scenario 2: เด็กวัยรุ่นชาย อายุ 17 ปี หมดสติ หายใจหอบลึก ลมหายใจมีกลิ่นผลไม้")
+                st.subheader("Scenario 2: เด็กวัยรุ่นชาย อายุ 17 ปี หมดสติ หายใจหอบลึก...")
                 st.markdown("""
                 **ประวัติ**: ปัสสาวะบ่อยและน้ำหนักลดมา 1 เดือน  
                 **ผลตรวจทางห้องปฏิบัติการ**:  
-                - Glucose: 450 mg/dL (Normal: 70-100)  
-                - pH: 7.15 (Normal: 7.35-7.45)  
-                - HCO₃⁻: 12 mEq/L (Normal: 22-26)  
+                - Glucose: 450 mg/dL  
+                - pH: 7.15  
+                - HCO₃⁻: 12 mEq/L  
                 - Ketone (Urine): Positive 4+  
-
-                **คำสั่ง**:  
-                จากรายการฮอร์โมนที่กำหนดให้ จงเลือกฮอร์โมนที่มีบทบาทสำคัญที่สุด 3 ชนิด และระบุการเปลี่ยนแปลง (เพิ่ม/ลด) และผลที่เกิดขึ้นลงในตาราง
                 """)
                 hormones = ["Insulin", "Glucagon", "Growth hormone", "Cortisol", "Catecholamine", "Aldosterone", "Vasopressin", "PTH"]
                 for i in range(3):
@@ -231,7 +299,6 @@ elif st.session_state.phase == 'RUNNING':
 
             elif ph == 2:
                 st.subheader("Scenario 2: กลไกการเกิดเลือดเป็นกรด")
-                st.info("จงลากกล่องข้อความมาวางเรียงลำดับ เพื่ออธิบายกลไกการเกิดเลือดเป็นกรดในผู้ป่วยรายนี้")
                 blocks = [
                     'Absence of Insulin activity',
                     'Cells cannot uptake Glucose',
@@ -248,9 +315,9 @@ elif st.session_state.phase == 'RUNNING':
 
             elif ph == 3:
                 st.subheader("Scenario 2: Synthesis")
-                st.markdown("**3.1** จากผลตรวจร่างกายที่พบว่าผู้ป่วย 'หายใจหอบลึก' (Kussmaul breathing) จงอธิบายว่าการหายใจแบบนี้ช่วยปรับสมดุล pH ในเลือดได้อย่างไร?")
+                st.markdown("**3.1** ... Kussmaul breathing ...")
                 e1 = st.text_area("คำตอบ 3.1:", height=80, key="s2_essay1")
-                st.markdown("**3.2** แพทย์ให้การรักษาโดยการฉีด Insulin... พบว่าผู้ป่วยมีภาวะโพแทสเซียมต่ำ (Hypokalemia) จงอธิบายสาเหตุว่าทำไมระดับโพแทสเซียม (K⁺) ในเลือดจึงลดต่ำลงหลังได้รับอินซูลิน?")
+                st.markdown("**3.2** ... Hypokalemia ...")
                 e2 = st.text_area("คำตอบ 3.2:", height=80, key="s2_essay2")
                 st.session_state.answers.update({'s2_essay1': e1, 's2_essay2': e2})
 
@@ -263,17 +330,20 @@ elif st.session_state.phase == 'RUNNING':
                 st.markdown("""
                 **ประวัติ**: พัฒนาการช้า  
                 **ผลตรวจเลือด**:  
-                - MCV: 65 fL (Normal: 80-100)  
-                - Hb: 6.0 g/dL (Normal: 12-14)  
+                - MCV: 65 fL  
+                - Hb: 6.0 g/dL  
                 - Hb typing: HbA2 10%, HbF 90%  
                 **Blood Smear**: Microcytic, Hypochromic, Target cells
-
-                **คำสั่ง**: จงตอบคำถามต่อไปนี้
                 """)
+                try:
+                    st.image("pedigree.jpg", caption="Pedigree Chart", use_column_width=True)
+                except:
+                    st.warning("⚠️ ไม่พบไฟล์ pedigree.jpg")
+                st.markdown("**คำสั่ง**: จงตอบคำถามต่อไปนี้")
                 diag = st.text_input("1. Diagnosis: ผู้ป่วยรายนี้เป็นโรคอะไร?", key="s3_diag")
-                inherit = st.radio("2. Inheritance Pattern: โรคนี้มีลักษณะการถ่ายทอดทางพันธุกรรมแบบใด?",
+                inherit = st.radio("2. Inheritance Pattern: ...",
                                    ["Autosomal dominant", "Autosomal recessive", "X-linked"], key="s3_inherit")
-                chance = st.text_input("3. Chance: หากพ่อแม่คู่นี้ต้องการมีลูกคนต่อไป โอกาสที่ลูกจะเป็นโรค (%)", key="s3_chance")
+                chance = st.text_input("3. Chance: ... (%)", key="s3_chance")
                 st.session_state.answers.update({
                     's3_diagnosis': diag,
                     's3_inheritance': inherit,
@@ -282,7 +352,6 @@ elif st.session_state.phase == 'RUNNING':
 
             elif ph == 2:
                 st.subheader("Scenario 3: กลไกการเกิดโรคธาลัสซีเมีย")
-                st.info("จงลากกล่องข้อความมาวางเรียงลำดับ เพื่ออธิบายกลไกการเกิดโรคให้ถูกต้อง โดยเลือกเฉพาะข้อเท็จจริงที่สัมพันธ์กับโรค Thalassemia เท่านั้น")
                 correct = [
                     'Genetic Mutation/Deletion',
                     'Defective Globin chain synthesis',
@@ -306,9 +375,9 @@ elif st.session_state.phase == 'RUNNING':
 
             elif ph == 3:
                 st.subheader("Scenario 3: Synthesis")
-                st.markdown("**3.1** ผู้ป่วยโรคนี้มักมีภาวะ 'เหล็กเกิน' (Iron Overload) แม้ไม่ได้รับประทานธาตุเหล็กเพิ่ม จงอธิบายสาเหตุ โดยเชื่อมโยงกับเรื่องการทำลายเม็ดเลือดแดง")
+                st.markdown("**3.1** ... เหล็กเกิน ...")
                 e1 = st.text_area("คำตอบ 3.1:", height=80, key="s3_essay1")
-                st.markdown("**3.2** ปัจจุบันมีการรักษาด้วยเทคโนโลยี CRISPR-Cas9 จงอธิบายหลักการทำงานของเทคโนโลยีนี้ในการรักษาโรคธาลัสซีเมียที่ระดับ Stem Cell ของผู้ป่วย")
+                st.markdown("**3.2** ... CRISPR-Cas9 ...")
                 e2 = st.text_area("คำตอบ 3.2:", height=80, key="s3_essay2")
                 st.session_state.answers.update({'s3_essay1': e1, 's3_essay2': e2})
 
@@ -317,22 +386,42 @@ elif st.session_state.phase == 'RUNNING':
         # ========================
         elif sc == 4:
             if ph == 1:
-                st.subheader("Scenario 4: ชายชาวประมง ประสบเหตุเรืออับปาง ดื่มน้ำทะเล 2 วัน")
+                st.subheader("Scenario 4: ชายชาวประมง ประสบเหตุเรืออับปาง...")
                 st.markdown("""
                 **Vital Signs**: BP 80/50 mmHg, Pulse 110 bpm  
                 **ผลตรวจร่างกาย**: ปากแห้งมาก, ปลายมือเท้าขาวซีดเย็น  
-                **Urine**: Specific Gravity 1.040 (Normal: 1.005-1.030)  
-                **Blood Osmolarity**: 320 mOsm/L (Normal: 280-295)
-
-                **คำสั่ง**: จงตอบคำถามต่อไปนี้
+                **Urine**: Specific Gravity 1.040  
+                **Blood Osmolarity**: 320 mOsm/L
                 """)
-                q1 = st.text_input("1. อาการหัวใจเต้นเร็ว ปลายมือเท้าขาวซีดเย็น เกิดจากการตอบสนองของระบบประสาทส่วน ________ ร่วมกับฮอร์โมน ________ ซึ่งหลั่งจาก ________", key="s4_q1")
-                q2 = st.text_input("2. ปัสสาวะที่มีความถ่วงจำเพาะสูง (1.040) เป็นผลจากฮอร์โมน ________ ซึ่งออกฤทธิ์ที่ ________", key="s4_q2")
-                st.session_state.answers.update({'s4_q1': q1, 's4_q2': q2})
+
+                st.markdown("### 1. อาการหัวใจเต้นเร็ว... เกิดจากการตอบสนองของระบบประสาทส่วน ________ ร่วมกับฮอร์โมน ________ ซึ่งหลั่งจาก ________")
+
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    q1_system = st.text_input("1.1 ระบบประสาทส่วน", key="s4_q1_system")
+                with col2:
+                    q1_hormone = st.text_input("1.2 ฮอร์โมน", key="s4_q1_hormone")
+                with col3:
+                    q1_source = st.text_input("1.3 หลั่งจาก", key="s4_q1_source")
+
+                st.markdown("### 2. Kidney Function: ... เป็นผลจากฮอร์โมน ________ ซึ่งออกฤทธิ์ที่ ________")
+
+                col4, col5 = st.columns(2)
+                with col4:
+                    q2_hormone = st.text_input("2.1 ฮอร์โมน", key="s4_q2_hormone")
+                with col5:
+                    q2_site = st.text_input("2.2 ออกฤทธิ์ที่", key="s4_q2_site")
+
+                st.session_state.answers.update({
+                    's4_q1_system': q1_system,
+                    's4_q1_hormone': q1_hormone,
+                    's4_q1_source': q1_source,
+                    's4_q2_hormone': q2_hormone,
+                    's4_q2_site': q2_site
+                })
 
             elif ph == 2:
                 st.subheader("Scenario 4: กลไกกู้ความดันโลหิต")
-                st.info("จากภาวะขาดน้ำรุนแรงและความดันโลหิตต่ำ จงเลือก 6 กลไกทางสรีรวิทยาที่ถูกต้อง ที่ร่างกายใช้ในการกู้ความดันโลหิต แล้วนำมาเรียงลำดับความสัมพันธ์ให้สมบูรณ์")
                 correct = [
                     'Activation of Sympathetic Nervous System (Baroreceptor reflex)',
                     'Adrenal Medulla releases Adrenaline',
@@ -356,47 +445,48 @@ elif st.session_state.phase == 'RUNNING':
 
             elif ph == 3:
                 st.subheader("Scenario 4: Synthesis")
-                st.markdown("**3.1** จงใช้หลักการ Osmosis อธิบายว่าทำไมการดื่มน้ำทะเล จึงทำให้ร่างกายขาดน้ำรุนแรงกว่าเดิม")
+                st.markdown("**3.1** ... ดื่มน้ำทะเล ...")
                 e1 = st.text_area("คำตอบ 3.1:", height=80, key="s4_essay1")
-                st.markdown("**3.2** ผู้ป่วยมีความดันโลหิตต่ำวิกฤต (80/50 mmHg) แพทย์ต้องการให้สารน้ำทางหลอดเลือดดำเพื่อกู้ชีพ... จงเลือกชนิดของสารน้ำที่เหมาะสมที่สุดและอธิบายเหตุผล")
+                st.markdown("**3.2** ... เลือกสารน้ำ ...")
                 options = ["Normal saline (0.9% NaCl)", "0.45% NaCl", "5% Dextrose/Water", "Plasma", "Whole blood"]
                 choice = st.selectbox("เลือกสารน้ำ:", options, key="s4_fluid_choice")
                 reason = st.text_area("เหตุผล:", height=80, key="s4_reason")
-                st.session_state.answers.update({'s4_choice': choice, 's4_reason': reason, 's4_essay1': e1})
+                st.session_state.answers.update({'s4_essay1': e1, 's4_choice': choice, 's4_reason': reason})
 
         # ========================
         # SCENARIO 5
         # ========================
         elif sc == 5:
             if ph == 1:
-                st.subheader("Scenario 5: นายเอ ถูกสุนัขจรจัดกัดเป็นแผลลึกหลายแผลที่ขา และแผลเปื้อนดินโคลน")
+                st.subheader("Scenario 5: นายเอ ถูกสุนัขจรจัดกัด...")
                 st.markdown("""
                 **แพทย์สั่งจ่ายยา 4 ชนิด**:  
-                1. Rabies Vaccine (วัคซีนพิษสุนัขบ้า)  
-                2. Rabies Immunoglobulin (เซรุ่มแก้พิษสุนัขบ้า)  
-                3. Tetanus Toxoid (วัคซีนบาดทะยัก)  
-                4. Tetanus Antitoxin (เซรุ่มแก้บาดทะยัก)
-
-                **คำสั่ง**: จงจำแนกประเภทของสารชีววัตถุทั้ง 4 ชนิด ลงในตารางให้ถูกต้อง
+                1. Rabies Vaccine  
+                2. Rabies Immunoglobulin  
+                3. Tetanus Toxoid  
+                4. Tetanus Antitoxin
                 """)
-                agents = ["Rabies Vaccine", "Rabies Immunoglobulin", "Tetanus Toxoid", "Tetanus Antitoxin"]
-                types = []
-                roles = []
-                for agent in agents:
-                    cols = st.columns(2)
-                    t = cols[0].radio(f"{agent} - ประเภทภูมิคุ้มกัน", ["Active", "Passive"], key=f"s5_{agent}_type")
-                    r = cols[1].radio(f"{agent} - หน้าที่หลัก", ["Immediate Neutralization", "Long-term Memory"], key=f"s5_{agent}_role")
-                    types.append(t)
-                    roles.append(r)
+                # Rabies Vaccine
+                rv_type = st.radio("Rabies Vaccine - ประเภทภูมิคุ้มกัน", ["Active", "Passive"], key="rv_type")
+                rv_role = st.radio("Rabies Vaccine - หน้าที่หลัก", ["Immediate Neutralization", "Long-term Memory"], key="rv_role")
+                # Rabies Immunoglobulin
+                rig_type = st.radio("Rabies Immunoglobulin - ประเภทภูมิคุ้มกัน", ["Active", "Passive"], key="rig_type")
+                rig_role = st.radio("Rabies Immunoglobulin - หน้าที่หลัก", ["Immediate Neutralization", "Long-term Memory"], key="rig_role")
+                # Tetanus Toxoid
+                tt_type = st.radio("Tetanus Toxoid - ประเภทภูมิคุ้มกัน", ["Active", "Passive"], key="tt_type")
+                tt_role = st.radio("Tetanus Toxoid - หน้าที่หลัก", ["Immediate Neutralization", "Long-term Memory"], key="tt_role")
+                # Tetanus Antitoxin
+                tat_type = st.radio("Tetanus Antitoxin - ประเภทภูมิคุ้มกัน", ["Active", "Passive"], key="tat_type")
+                tat_role = st.radio("Tetanus Antitoxin - หน้าที่หลัก", ["Immediate Neutralization", "Long-term Memory"], key="tat_role")
                 st.session_state.answers.update({
-                    's5_agents': agents,
-                    's5_types': types,
-                    's5_roles': roles
+                    's5_rv_type': rv_type, 's5_rv_role': rv_role,
+                    's5_rig_type': rig_type, 's5_rig_role': rig_role,
+                    's5_tt_type': tt_type, 's5_tt_role': tt_role,
+                    's5_tat_type': tat_type, 's5_tat_role': tat_role
                 })
 
             elif ph == 2:
                 st.subheader("Scenario 5: กลไกการป้องกันโรคพิษสุนัขบ้า")
-                st.info("จงเรียงลำดับกลไกการป้องกันโรคพิษสุนัขบ้าในผู้ป่วยรายนี้ เพื่ออธิบายว่าทำไมต้องฉีดทั้ง RIG และ Vaccine ร่วมกัน")
                 correct = [
                     'Rabies Virus enters the wound',
                     'Rabies Immunoglobulin binds and neutralizes virus at the wound site',
@@ -418,9 +508,9 @@ elif st.session_state.phase == 'RUNNING':
 
             elif ph == 3:
                 st.subheader("Scenario 5: Synthesis & Application")
-                st.markdown("**3.1** ทำไมแพทย์ต้องฉีด Rabies Immunoglobulin ให้ผู้ป่วยที่บริเวณรอบบาดแผลมากที่สุดเท่าที่จะทำได้ ในขณะที่ Rabies Vaccine ฉีดที่ต้นแขน? จงอธิบายโดยใช้หลักการกระจายตัวของเชื้อ (Viral Spread) และขนาดโมเลกุลของ Antibody")
+                st.markdown("**3.1** ... RIG ที่แผล ...")
                 e1 = st.text_area("คำตอบ 3.1:", height=80, key="s5_essay1")
-                st.markdown("**3.2** หากนายเอเคยได้รับวัคซีนบาดทะยักครบถ้วนเมื่อ 1 ปีก่อน แพทย์จะตัดสินใจฉีดเพียง Tetanus Toxoid 1 เข็ม โดยไม่ฉีด Tetanus Antitoxin จงอธิบายเหตุผลตามหลักการทางภูมิคุ้มกันวิทยา")
+                st.markdown("**3.2** ... ไม่ฉีด TAT ...")
                 e2 = st.text_area("คำตอบ 3.2:", height=80, key="s5_essay2")
                 st.session_state.answers.update({'s5_essay1': e1, 's5_essay2': e2})
 
@@ -444,22 +534,30 @@ elif st.session_state.phase == 'FINISH':
     st.balloons()
     st.success("✅ ส่งข้อสอบเรียบร้อย!")
 
-    # Trigger AI grading only once
-    if 'ai_grading_done' not in st.session_state:
-        st.session_state.ai_grading_done = True
-        with st.spinner("กำลังตรวจคำตอบด้วย AI..."):
-            # Scenario 1
-            if 's1_essay1' in st.session_state.answers:
-                g1 = get_ai_grade("Explain Atropine mechanism...", st.session_state.answers['s1_essay1'], "Muscarinic receptor, Competitive Inhibition, Antagonist, Salivary gland")
-                g2 = get_ai_grade("Why doesn't Atropine help muscle fasciculation?", st.session_state.answers['s1_essay2'], "Nicotinic receptor, Skeletal muscle, Neuromuscular junction, Specificity")
-                st.session_state.answers['s1_grade1'] = g1
-                st.session_state.answers['s1_grade2'] = g2
-            # Add other scenarios if needed
+    # Submit to Google Form
+    def submit_to_google_form(data, form_id, field_mapping):
+        url = f"https://docs.google.com/forms/d/e/{form_id}/formResponse"
+        payload = {}
+        for key, value in data.items():
+            if key in field_mapping:
+                payload[field_mapping[key]] = str(value)
+        try:
+            response = requests.post(url, data=payload)
+            return response.status_code == 200
+        except Exception as e:
+            st.error(f"ส่งคำตอบล้มเหลว: {e}")
+            return False
+
+    if st.button("📤 ส่งคำตอบไปยังผู้คุมสอบ"):
+        if submit_to_google_form(st.session_state.answers, FORM_ID, FIELD_MAPPING):
+            st.success("✅ ส่งคำตอบเรียบร้อย!")
+        else:
+            st.error("❌ ส่งไม่สำเร็จ กรุณาลองใหม่")
 
     # Show results
     st.json(st.session_state.answers)
 
-    # Download CSV
+    # Download CSV (backup)
     df = pd.DataFrame([st.session_state.answers])
     csv = df.to_csv(index=False).encode('utf-8')
     st.download_button(
