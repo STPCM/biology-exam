@@ -138,7 +138,7 @@ elif st.session_state.phase == 'RUNNING':
         # ========================
         if sc == 1:
             if ph == 1:
-                st.subheader("Scenario 1: ชาวสวนถูกหามส่งโรงพยาบาลด้วยอาการน้ำลายฟูมปาก...")
+                st.subheader("Scenario 1: ชาวสวนถูกหามส่งโรงพยาบาลด้วยอาการน้ำลายฟูมปาก กล้ามเนื้อกระตุกและอ่อนแรง หลังกลับจากออกไปพ่นยาฆ่าแมลงในสวน")
                 col1, col2 = st.columns(2)
                 with col1:
                     st.info("VDO 1: อาการที่ขา")
@@ -177,6 +177,7 @@ elif st.session_state.phase == 'RUNNING':
 
             elif ph == 2:
                 st.subheader("Scenario 1: Mechanism (Drag & Drop)")
+                st.info("จงลากกล่องข้อความมาวางเรียงลำดับ เพื่ออธิบายกลไกการออกฤทธิ์ (Mechanism of Action) ของสารพิษนี้ให้ถูกต้องสมบูรณ์")
                 blocks = [
                     'Toxin absorption through skin/inhalation',
                     'Inhibition of Acetylcholinesterase',
@@ -206,7 +207,18 @@ elif st.session_state.phase == 'RUNNING':
         # ========================
         elif sc == 2:
             if ph == 1:
-                st.subheader("Scenario 2: เด็กวัยรุ่นชาย อายุ 17 ปี หมดสติ หายใจหอบลึก...")
+                st.subheader("Scenario 2: เด็กวัยรุ่นชาย อายุ 17 ปี หมดสติ หายใจหอบลึก ลมหายใจมีกลิ่นผลไม้")
+                st.markdown("""
+                **ประวัติ**: ปัสสาวะบ่อยและน้ำหนักลดมา 1 เดือน  
+                **ผลตรวจทางห้องปฏิบัติการ**:  
+                - Glucose: 450 mg/dL (Normal: 70-100)  
+                - pH: 7.15 (Normal: 7.35-7.45)  
+                - HCO₃⁻: 12 mEq/L (Normal: 22-26)  
+                - Ketone (Urine): Positive 4+  
+
+                **คำสั่ง**:  
+                จากรายการฮอร์โมนที่กำหนดให้ จงเลือกฮอร์โมนที่มีบทบาทสำคัญที่สุด 3 ชนิด และระบุการเปลี่ยนแปลง (เพิ่ม/ลด) และผลที่เกิดขึ้นลงในตาราง
+                """)
                 hormones = ["Insulin", "Glucagon", "Growth hormone", "Cortisol", "Catecholamine", "Aldosterone", "Vasopressin", "PTH"]
                 for i in range(3):
                     cols = st.columns(3)
@@ -219,6 +231,7 @@ elif st.session_state.phase == 'RUNNING':
 
             elif ph == 2:
                 st.subheader("Scenario 2: กลไกการเกิดเลือดเป็นกรด")
+                st.info("จงลากกล่องข้อความมาวางเรียงลำดับ เพื่ออธิบายกลไกการเกิดเลือดเป็นกรดในผู้ป่วยรายนี้")
                 blocks = [
                     'Absence of Insulin activity',
                     'Cells cannot uptake Glucose',
@@ -247,6 +260,16 @@ elif st.session_state.phase == 'RUNNING':
         elif sc == 3:
             if ph == 1:
                 st.subheader("Scenario 3: เด็กชายอายุ 8 ปี มีอาการซีด เรื้อรัง ตัวเหลือง ตับและม้ามโต")
+                st.markdown("""
+                **ประวัติ**: พัฒนาการช้า  
+                **ผลตรวจเลือด**:  
+                - MCV: 65 fL (Normal: 80-100)  
+                - Hb: 6.0 g/dL (Normal: 12-14)  
+                - Hb typing: HbA2 10%, HbF 90%  
+                **Blood Smear**: Microcytic, Hypochromic, Target cells
+
+                **คำสั่ง**: จงตอบคำถามต่อไปนี้
+                """)
                 diag = st.text_input("1. Diagnosis: ผู้ป่วยรายนี้เป็นโรคอะไร?", key="s3_diag")
                 inherit = st.radio("2. Inheritance Pattern: โรคนี้มีลักษณะการถ่ายทอดทางพันธุกรรมแบบใด?",
                                    ["Autosomal dominant", "Autosomal recessive", "X-linked"], key="s3_inherit")
@@ -259,6 +282,7 @@ elif st.session_state.phase == 'RUNNING':
 
             elif ph == 2:
                 st.subheader("Scenario 3: กลไกการเกิดโรคธาลัสซีเมีย")
+                st.info("จงลากกล่องข้อความมาวางเรียงลำดับ เพื่ออธิบายกลไกการเกิดโรคให้ถูกต้อง โดยเลือกเฉพาะข้อเท็จจริงที่สัมพันธ์กับโรค Thalassemia เท่านั้น")
                 correct = [
                     'Genetic Mutation/Deletion',
                     'Defective Globin chain synthesis',
@@ -294,12 +318,21 @@ elif st.session_state.phase == 'RUNNING':
         elif sc == 4:
             if ph == 1:
                 st.subheader("Scenario 4: ชายชาวประมง ประสบเหตุเรืออับปาง ดื่มน้ำทะเล 2 วัน")
+                st.markdown("""
+                **Vital Signs**: BP 80/50 mmHg, Pulse 110 bpm  
+                **ผลตรวจร่างกาย**: ปากแห้งมาก, ปลายมือเท้าขาวซีดเย็น  
+                **Urine**: Specific Gravity 1.040 (Normal: 1.005-1.030)  
+                **Blood Osmolarity**: 320 mOsm/L (Normal: 280-295)
+
+                **คำสั่ง**: จงตอบคำถามต่อไปนี้
+                """)
                 q1 = st.text_input("1. อาการหัวใจเต้นเร็ว ปลายมือเท้าขาวซีดเย็น เกิดจากการตอบสนองของระบบประสาทส่วน ________ ร่วมกับฮอร์โมน ________ ซึ่งหลั่งจาก ________", key="s4_q1")
                 q2 = st.text_input("2. ปัสสาวะที่มีความถ่วงจำเพาะสูง (1.040) เป็นผลจากฮอร์โมน ________ ซึ่งออกฤทธิ์ที่ ________", key="s4_q2")
                 st.session_state.answers.update({'s4_q1': q1, 's4_q2': q2})
 
             elif ph == 2:
                 st.subheader("Scenario 4: กลไกกู้ความดันโลหิต")
+                st.info("จากภาวะขาดน้ำรุนแรงและความดันโลหิตต่ำ จงเลือก 6 กลไกทางสรีรวิทยาที่ถูกต้อง ที่ร่างกายใช้ในการกู้ความดันโลหิต แล้วนำมาเรียงลำดับความสัมพันธ์ให้สมบูรณ์")
                 correct = [
                     'Activation of Sympathetic Nervous System (Baroreceptor reflex)',
                     'Adrenal Medulla releases Adrenaline',
@@ -336,7 +369,16 @@ elif st.session_state.phase == 'RUNNING':
         # ========================
         elif sc == 5:
             if ph == 1:
-                st.subheader("Scenario 5: นายเอ ถูกสุนัขจรจัดกัดเป็นแผลลึกหลายแผลที่ขา...")
+                st.subheader("Scenario 5: นายเอ ถูกสุนัขจรจัดกัดเป็นแผลลึกหลายแผลที่ขา และแผลเปื้อนดินโคลน")
+                st.markdown("""
+                **แพทย์สั่งจ่ายยา 4 ชนิด**:  
+                1. Rabies Vaccine (วัคซีนพิษสุนัขบ้า)  
+                2. Rabies Immunoglobulin (เซรุ่มแก้พิษสุนัขบ้า)  
+                3. Tetanus Toxoid (วัคซีนบาดทะยัก)  
+                4. Tetanus Antitoxin (เซรุ่มแก้บาดทะยัก)
+
+                **คำสั่ง**: จงจำแนกประเภทของสารชีววัตถุทั้ง 4 ชนิด ลงในตารางให้ถูกต้อง
+                """)
                 agents = ["Rabies Vaccine", "Rabies Immunoglobulin", "Tetanus Toxoid", "Tetanus Antitoxin"]
                 types = []
                 roles = []
@@ -354,6 +396,7 @@ elif st.session_state.phase == 'RUNNING':
 
             elif ph == 2:
                 st.subheader("Scenario 5: กลไกการป้องกันโรคพิษสุนัขบ้า")
+                st.info("จงเรียงลำดับกลไกการป้องกันโรคพิษสุนัขบ้าในผู้ป่วยรายนี้ เพื่ออธิบายว่าทำไมต้องฉีดทั้ง RIG และ Vaccine ร่วมกัน")
                 correct = [
                     'Rabies Virus enters the wound',
                     'Rabies Immunoglobulin binds and neutralizes virus at the wound site',
@@ -411,7 +454,7 @@ elif st.session_state.phase == 'FINISH':
                 g2 = get_ai_grade("Why doesn't Atropine help muscle fasciculation?", st.session_state.answers['s1_essay2'], "Nicotinic receptor, Skeletal muscle, Neuromuscular junction, Specificity")
                 st.session_state.answers['s1_grade1'] = g1
                 st.session_state.answers['s1_grade2'] = g2
-            # ... (add other scenarios if needed)
+            # Add other scenarios if needed
 
     # Show results
     st.json(st.session_state.answers)
